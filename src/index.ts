@@ -211,63 +211,53 @@ async function fetchStockQuote(symbol: string) {
   checkRateLimit();
   
   try {
-    // Try the v7 API endpoint first
     const options = {
       method: 'GET',
       headers: getHeaders()
     };
     
-    // First attempt - v7 API
-    try {
-      const v7Url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`;
-      const v7Response = await fetchWithRetry(v7Url, options);
-      
-      if (v7Response.ok) {
-        const data = await v7Response.json();
-        const result = data.quoteResponse?.result?.[0];
-        
-        if (result) {
-          return formatStockQuote(result);
-        }
-      }
-    } catch (error) {
-      console.error("v7 API attempt failed:", error);
-      // Continue to fallback methods
-    }
+    // Use the working v8 finance/chart API format
+    // Get current timestamp for period2 and subtract a small amount for period1
+    const now = Math.floor(Date.now() / 1000);
+    const oneMinuteAgo = now - 60;
     
-    // Second attempt - v6 API (fallback)
-    try {
-      const v6Url = `https://query1.finance.yahoo.com/v6/finance/quote?symbols=${encodeURIComponent(symbol)}`;
-      const v6Response = await fetchWithRetry(v6Url, options);
-      
-      if (v6Response.ok) {
-        const data = await v6Response.json();
-        const result = data.quoteResponse?.result?.[0];
-        
-        if (result) {
-          return formatStockQuote(result);
-        }
-      }
-    } catch (error) {
-      console.error("v6 API attempt failed:", error);
-      // Continue to fallback methods
-    }
+    const chartUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${oneMinuteAgo}&period2=${now}&interval=1d&events=history`;
+    console.error(`Fetching from URL: ${chartUrl}`);
     
-    // Final attempt - Use the chart API to at least get basic pricing info
-    try {
-      const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
-      const chartResponse = await fetchWithRetry(chartUrl, options);
+    const chartResponse = await fetchWithRetry(chartUrl, options);
+    
+    if (chartResponse.ok) {
+      const data = await chartResponse.json();
+      const result = data.chart?.result?.[0];
       
-      if (chartResponse.ok) {
-        const data = await chartResponse.json();
-        const result = data.chart?.result?.[0];
-        
-        if (result) {
+      if (result) {
+        // Try to extract full quote information if available
+        if (result.meta) {
+          const quoteData = {
+            symbol: result.meta.symbol,
+            shortName: result.meta.shortName || result.meta.longName || symbol,
+            regularMarketPrice: result.meta.regularMarketPrice,
+            regularMarketChange: result.meta.regularMarketPrice - result.meta.chartPreviousClose,
+            regularMarketChangePercent: (result.meta.regularMarketPrice - result.meta.chartPreviousClose) / result.meta.chartPreviousClose,
+            regularMarketPreviousClose: result.meta.chartPreviousClose,
+            regularMarketOpen: result.indicators?.quote?.[0]?.open?.[0],
+            regularMarketDayLow: result.meta.regularMarketDayLow || result.indicators?.quote?.[0]?.low?.[0],
+            regularMarketDayHigh: result.meta.regularMarketDayHigh || result.indicators?.quote?.[0]?.high?.[0],
+            fiftyTwoWeekLow: result.meta.fiftyTwoWeekLow,
+            fiftyTwoWeekHigh: result.meta.fiftyTwoWeekHigh,
+            regularMarketVolume: result.meta.regularMarketVolume || result.indicators?.quote?.[0]?.volume?.[0],
+            averageDailyVolume3Month: null, // Not available in chart API
+            marketCap: null, // Not available in chart API
+            trailingPE: null, // Not available in chart API
+            epsTrailingTwelveMonths: null, // Not available in chart API
+            dividendYield: null // Not available in chart API
+          };
+          
+          return formatStockQuote(quoteData);
+        } else {
           return formatBasicQuote(result, symbol);
         }
       }
-    } catch (error) {
-      console.error("Chart API attempt failed:", error);
     }
     
     return `Unable to retrieve data for symbol: ${symbol}. The ticker symbol may be invalid or Yahoo Finance data may be temporarily unavailable.`;
@@ -332,36 +322,21 @@ async function fetchMarketData(indices: string[] = ["^GSPC", "^DJI", "^IXIC"]) {
   checkRateLimit();
   
   try {
-    // We'll try different approaches in sequence
     const options = {
       method: 'GET',
       headers: getHeaders()
     };
     
-    // Try the quote API first
-    try {
-      const quoteUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(indices.join(','))}`;
-      const quoteResponse = await fetchWithRetry(quoteUrl, options);
-      
-      if (quoteResponse.ok) {
-        const data = await quoteResponse.json();
-        const results = data.quoteResponse?.result || [];
-        
-        if (results.length > 0) {
-          return formatMarketData(results);
-        }
-      }
-    } catch (error) {
-      console.error("Quote API attempt failed:", error);
-      // Continue to fallback methods
-    }
-    
-    // Fallback: Try to get data for each index individually via the chart API
+    // Use the working v8 finance/chart API for each index
     const indexResults = [];
+    const now = Math.floor(Date.now() / 1000);
+    const oneMinuteAgo = now - 60;
     
     for (const indexSymbol of indices) {
       try {
-        const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(indexSymbol)}?interval=1d&range=1d`;
+        const chartUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(indexSymbol)}?period1=${oneMinuteAgo}&period2=${now}&interval=1d&events=history`;
+        console.error(`Fetching from URL: ${chartUrl}`);
+        
         const chartResponse = await fetchWithRetry(chartUrl, options);
         
         if (chartResponse.ok) {
@@ -371,11 +346,11 @@ async function fetchMarketData(indices: string[] = ["^GSPC", "^DJI", "^IXIC"]) {
           if (result) {
             indexResults.push({
               symbol: indexSymbol,
-              shortName: result.meta.instrumentInfo?.shortName || indexSymbol,
+              shortName: result.meta.shortName || result.meta.longName || indexSymbol,
               regularMarketPrice: result.meta.regularMarketPrice,
-              regularMarketChange: result.meta.regularMarketPrice - result.meta.previousClose,
-              regularMarketChangePercent: (result.meta.regularMarketPrice - result.meta.previousClose) / result.meta.previousClose,
-              regularMarketPreviousClose: result.meta.previousClose,
+              regularMarketChange: result.meta.regularMarketPrice - result.meta.chartPreviousClose,
+              regularMarketChangePercent: (result.meta.regularMarketPrice - result.meta.chartPreviousClose) / result.meta.chartPreviousClose,
+              regularMarketPreviousClose: result.meta.chartPreviousClose,
               regularMarketDayHigh: result.meta.regularMarketDayHigh,
               regularMarketDayLow: result.meta.regularMarketDayLow
             });
@@ -427,7 +402,53 @@ async function fetchStockHistory(symbol: string, period: string = "1mo", interva
       throw new Error(`Invalid interval: ${interval}. Valid intervals are: ${validIntervals.join(', ')}`);
     }
     
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${period}&interval=${interval}`;
+    // Convert relative time period to absolute timestamps
+    let period1, period2;
+    period2 = Math.floor(Date.now() / 1000); // Current time
+    
+    // Calculate period1 based on the requested period
+    switch(period) {
+      case '1d':
+        period1 = period2 - 86400; // 1 day in seconds
+        break;
+      case '5d':
+        period1 = period2 - 5 * 86400; // 5 days in seconds
+        break;
+      case '1mo':
+        period1 = period2 - 30 * 86400; // 30 days in seconds
+        break;
+      case '3mo':
+        period1 = period2 - 90 * 86400; // 90 days in seconds
+        break;
+      case '6mo':
+        period1 = period2 - 180 * 86400; // 180 days in seconds
+        break;
+      case '1y':
+        period1 = period2 - 365 * 86400; // 365 days in seconds
+        break;
+      case '2y':
+        period1 = period2 - 2 * 365 * 86400; // 2 years in seconds
+        break;
+      case '5y':
+        period1 = period2 - 5 * 365 * 86400; // 5 years in seconds
+        break;
+      case '10y':
+        period1 = period2 - 10 * 365 * 86400; // 10 years in seconds
+        break;
+      case 'ytd':
+        const now = new Date();
+        const startOfYear = new Date(now.getFullYear(), 0, 1); // January 1st of current year
+        period1 = Math.floor(startOfYear.getTime() / 1000);
+        break;
+      case 'max':
+        period1 = 0; // Beginning of time (for stock data)
+        break;
+      default:
+        period1 = period2 - 30 * 86400; // Default to 1 month
+    }
+    
+    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${period1}&period2=${period2}&interval=${interval}&events=history`;
+    console.error(`Fetching from URL: ${url}`);
     
     const response = await fetchWithRetry(url, {
       method: 'GET',
