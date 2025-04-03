@@ -8,6 +8,7 @@ COPY src/ ./src/
 
 RUN --mount=type=cache,target=/root/.npm npm install
 RUN npm run build
+RUN chmod +x dist/index.js
 
 FROM node:22-alpine AS release
 

@@ -1,0 +1,51 @@
+# Source code
+/src
+
+# CI/CD files
+.github
+.travis.yml
+azure-pipelines.yml
+
+# Editor directories and files
+.vscode
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
+
+# Config files
+tsconfig.json
+tslint.json
+.eslintrc
+.eslintignore
+.prettierrc
+.prettierrc.js
+.prettierignore
+.editorconfig
+
+# Test files
+test
+tests
+__tests__
+coverage
+.nyc_output
+
+# Docker
+Dockerfile
+docker-compose.yml
+docker-compose.yaml
+.dockerignore
+
+# Git
+.git
+.gitignore
+
+# Miscellaneous
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+*.log
+.DS_Store
