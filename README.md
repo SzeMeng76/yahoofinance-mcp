@@ -2,12 +2,29 @@
 
 A Model Context Protocol (MCP) server that provides financial market data from Yahoo Finance. Integrate real-time stock quotes, market data, and historical stock information with Claude and other MCP-compatible assistants, without requiring API keys.
 
+## Visualization and Analysis Capabilities
+
+This MCP server enables powerful financial data visualization and analysis through Claude:
+
+![Market Sentiment Analysis Dashboard](assets/sentiment.png)
+*Market Sentiment Analysis Dashboard showing real-time index performance, fear/greed indicators, and historical trends*
+
+![Portfolio Performance Tracking](assets/portfolio.png)
+*Track your tech portfolio performance with detailed metrics and visualizations*
+
+![Stock Price Technical Analysis](assets/analysis.png)
+*Deep dive technical analysis with price trends, moving averages, and performance insights*
+
 ## Features
 
 - **Stock Quotes**: Get current stock price, change, range, volume, and other key metrics
 - **Market Indices**: Retrieve data for major market indices like S&P 500, Dow Jones, NASDAQ
 - **Historical Data**: Fetch and analyze historical stock data with customizable time periods and intervals
 - **Rate limiting**: Built-in rate limiting to ensure reliable access to Yahoo Finance
+- **Sentiment Analysis**: Visualize market sentiment with fear/greed indicators and trend analysis
+- **Portfolio Tracking**: Monitor your investment portfolio performance over time
+- **Technical Analysis**: Access moving averages, price trends, and performance metrics
+- **Visual Dashboards**: Generate comprehensive financial dashboards for better insights
 
 ## Installation
 
@@ -136,6 +153,21 @@ Date       | Open     | High     | Low      | Close    | Volume
 Price Change: $-5.13 (-2.83%)
 ```
 
+### yahoo_company_financials
+Gets financial statement data for a company from Yahoo Finance.
+
+**Parameters:**
+- `symbol`: Stock ticker symbol
+- `statement` (optional): Financial statement type ("income", "balance", "cash", or "all")
+- `period` (optional): Time period ("annual" or "quarterly")
+
+### yahoo_stock_news_sentiment
+Gets recent news articles and sentiment analysis for a stock.
+
+**Parameters:**
+- `symbol` (optional): Stock ticker symbol (omit for general market news)
+- `count` (optional): Number of news items to retrieve (max 10)
+
 ## Example Prompts
 
 Once the server is connected to Claude, you can ask questions like:
@@ -147,6 +179,11 @@ Once the server is connected to Claude, you can ask questions like:
 - "Compare the performance of GOOGL and AMZN over the past 3 months."
 - "What's the 52-week range for NVDA?"
 - "How has the S&P 500 performed today?"
+- "Create a market sentiment dashboard for today's trading."
+- "Generate a portfolio performance chart for my tech stocks."
+- "Show me a technical analysis of Tesla stock with moving averages."
+- "What's the current fear/greed index in the market?"
+- "Visualize the correlation between S&P 500 and VIX over the past month."
 
 ## Troubleshooting
 
