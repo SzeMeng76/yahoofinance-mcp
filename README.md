@@ -27,39 +27,12 @@ docker build -t yahoofinance-mcp .
 docker run -i --rm yahoofinance-mcp
 ```
 
-### Using npm (Coming Soon)
-
-Once published to npm, you'll be able to run the server directly with:
-
-```bash
-npx @elektrothing/server-yahoofinance
-```
-
-### From Source
-
-To run from source:
-
-```bash
-# Clone the repository
-git clone https://github.com/jasontoo/yahoofinance-mcp.git
-cd yahoofinance-mcp
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Run the server
-npm start
-```
-
 ## Integration with Claude Desktop
 
 1. Download and install [Claude Desktop](https://claude.ai/download)
 2. Create or edit the Claude Desktop configuration file:
-   - Mac: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+  - Mac: `~/Library/Application Support/Claude/claude_desktop_config.json`
+  - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 3. Add the Yahoo Finance server configuration using your preferred method:
 
@@ -68,46 +41,15 @@ npm start
 ```json
 {
   "mcpServers": {
-    "yahoofinance": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "yahoofinance-mcp"
-      ]
-    }
-  }
-}
-```
-
-### NPM Option (Once Published)
-
-```json
-{
-  "mcpServers": {
-    "yahoofinance": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@elektrothing/server-yahoofinance"
-      ]
-    }
-  }
-}
-```
-
-### From Source Option
-
-```json
-{
-  "mcpServers": {
-    "yahoofinance": {
-      "command": "node",
-      "args": [
-        "/absolute/path/to/yahoofinance-mcp/dist/index.js"
-      ]
-    }
+   "yahoofinance": {
+    "command": "docker",
+    "args": [
+      "run",
+      "-i",
+      "--rm",
+      "yahoofinance-mcp"
+    ]
+   }
   }
 }
 ```
@@ -211,48 +153,21 @@ Once the server is connected to Claude, you can ask questions like:
 If you encounter issues:
 
 1. **Claude Desktop Logs**:
-   - Check for errors: `tail -n 20 -f ~/Library/Logs/Claude/mcp*.log`
-   
+  - Check for errors: `tail -n 20 -f ~/Library/Logs/Claude/mcp*.log`
+  
 2. **Server Connectivity**:
-   - Make sure Docker is running if using Docker
-   - Verify your command paths if running from source
-   - Ensure you have an active internet connection
+  - Make sure Docker is running if using Docker
+  - Ensure you have an active internet connection
 
 3. **Tool Execution Issues**:
-   - Verify ticker symbols are correct
-   - Check if Yahoo Finance API might be rate-limiting requests
-   - Wait a few minutes and try again if you see timeout errors
+  - Verify ticker symbols are correct
+  - Check if Yahoo Finance API might be rate-limiting requests
+  - Wait a few minutes and try again if you see timeout errors
 
 4. **Config File Issues**:
-   - Make sure your `claude_desktop_config.json` is formatted correctly
-   - Double-check all paths and commands
-   - Restart Claude Desktop after making changes
-
-## Publishing (For Maintainers)
-
-To publish the package to npm under the `@elektrothing` organization:
-
-```bash
-# Login to npm
-npm login
-
-# Make sure you're a member of the elektrothing organization
-# If not, create it: npm org create elektrothing
-
-# Add yourself to the organization (if needed)
-# npm org add elektrothing your-npm-username owner
-
-# Publish as a public package
-npm publish --access public
-```
-
-Alternatively, if you want to publish without an organization scope, you can:
-
-```bash
-# Change the name in package.json to "server-yahoofinance" (without scope)
-# Then publish
-npm publish
-```
+  - Make sure your `claude_desktop_config.json` is formatted correctly
+  - Double-check all paths and commands
+  - Restart Claude Desktop after making changes
 
 ## License
 
