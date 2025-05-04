@@ -1,6 +1,6 @@
 {
   "name": "@szemeng76/server-yahoofinance",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "description": "MCP server for Yahoo Finance API integration",
   "license": "MIT",
   "author": "szemeng76",
